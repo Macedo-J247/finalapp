@@ -3,7 +3,7 @@ class User {
   String? id; // ID é opcional antes de ser salvo no Auth/Firestore
   String name;
   String email;
-  String password;
+  String? password; // Made password field nullable
   String role; // 'passageiro' ou 'motorista'
   int? veiculoId; // ID do Veículo associado (se for motorista)
   double? avaliacao; // Média de avaliação (e.g., 4.7)
@@ -13,7 +13,7 @@ class User {
     this.id,
     required this.name,
     required this.email,
-    required this.password,
+    this.password, // Adjusted constructor to accept nullable password
     required this.role,
     this.veiculoId,
     this.avaliacao,
@@ -26,7 +26,7 @@ class User {
       id: json['id'] as String?,
       name: json['name'] as String,
       email: json['email'] as String,
-      password: json['password'] as String,
+      password: json['password'] as String?, // Adjusted fromJson to handle nullable password
       role: json['role'] as String,
       veiculoId: json['veiculoId'] as int?,
       // É importante garantir que o double seja tratado corretamente
@@ -41,7 +41,7 @@ class User {
       'id': id,
       'name': name,
       'email': email,
-      'password': password,
+      'password': null, // Set password to null when converting to JSON for Firestore
       'role': role,
       'veiculoId': veiculoId,
       'avaliacao': avaliacao,

@@ -1,21 +1,22 @@
-// lib/controllers/auth_service.dart
+// lib/controllers/auth_controller.dart
 
-import 'package:firebase_auth/firebase_auth.dart' as FBAuth;
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
 
 class AuthService {
-  final FBAuth.FirebaseAuth _auth = FBAuth.FirebaseAuth.instance;
+  final fb_auth.FirebaseAuth _auth = fb_auth.FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // --- MÉTODOS DE AUTENTICAÇÃO ---
 
   // 1. Monitorar Mudanças de Estado de Autenticação
   // Retorna um Stream que emite o usuário atual sempre que o estado de login muda.
-  Stream<FBAuth.User?> get userChanges => _auth.authStateChanges();
+  Stream<fb_auth.User?> get userChanges => _auth.authStateChanges();
 
   // 2. Login de Usuário
-  Future<FBAuth.UserCredential> signIn(
+  Future<fb_auth.UserCredential> signIn(
       {required String email, required String password}) async {
     try {
       final userCredential = await _auth.signInWithEmailAndPassword(
@@ -23,14 +24,14 @@ class AuthService {
         password: password,
       );
       return userCredential;
-    } on FBAuth.FirebaseAuthException catch (e) {
+    } on fb_auth.FirebaseAuthException catch (e) {
       // Re-lança a exceção para ser tratada na View (LoginView)
       throw Exception(e.message ?? 'Erro de login desconhecido.');
     }
   }
 
   // 3. Cadastro de Novo Usuário
-  Future<FBAuth.UserCredential> signUp({
+  Future<fb_auth.UserCredential> signUp({
     required String name,
     required String email,
     required String password,
@@ -51,9 +52,11 @@ class AuthService {
           id: firebaseUser.uid,
           name: name,
           email: email,
-          password:
-              password, // OBS: A senha deve ser tratada como token no backend!
+          password: null, // Explicitly set to null for new signups
           role: role,
+          veiculoId: null, // Explicitly set to null for new signups
+          avaliacao: null, // Explicitly set to null for new signups
+          totalAvaliacoes: null, // Explicitly set to null for new signups
         );
 
         // 3.3. Salvar o perfil inicial no Firestore
@@ -64,7 +67,7 @@ class AuthService {
       }
 
       return userCredential;
-    } on FBAuth.FirebaseAuthException catch (e) {
+    } on fb_auth.FirebaseAuthException catch (e) {
       throw Exception(e.message ?? 'Erro de cadastro desconhecido.');
     }
   }
@@ -87,7 +90,7 @@ class AuthService {
       return null;
     } catch (e) {
       // Em caso de erro de conexão ou leitura
-      print('Erro ao buscar perfil do usuário: $e');
+      debugPrint('Erro ao buscar perfil do usuário: $e');
       return null;
     }
   }

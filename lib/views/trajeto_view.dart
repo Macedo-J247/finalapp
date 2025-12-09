@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:nanoid/nanoid.dart'; // Para gerar o ID da Viagem
 import '../models/viagem_model.dart'; // Importar Viagem e TripStatus
 import '../controllers/viagem_controller.dart'; // Serviço de CRUD para Viagem (a ser criado)
+import 'package:google_maps_flutter/google_maps_flutter.dart'; // Add this import
+import 'dart:async'; // Required for Completer
 
 class TrajetoView extends StatefulWidget {
   final bool isDriver; // Indica se a view está sendo usada por um motorista
@@ -28,6 +30,13 @@ class _TrajetoViewState extends State<TrajetoView> {
   // Variáveis simuladas (em um app real, viriam de um Provider ou BLoC)
   final String currentUserId = 'auth_user_id_123'; // ID do usuário logado
 
+  // Google Maps related variables
+  final Completer<GoogleMapController> _controller = Completer<GoogleMapController>();
+  static const CameraPosition _kGooglePlex = CameraPosition(
+    target: LatLng(37.42796133580664, -122.085749655962),
+    zoom: 14.4746,
+  );
+
   Future<void> _handleConfirm() async {
     setState(() {
       _isLoading = true;
@@ -36,10 +45,12 @@ class _TrajetoViewState extends State<TrajetoView> {
     // 1. Coleta e validação de dados
     if (_originController.text.isEmpty || _destinationController.text.isEmpty) {
       // Mostrar SnackBar de erro
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Por favor, defina a Origem e o Destino.')),
-      );
+      if (mounted) { // Ensure context is still valid
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Por favor, defina a Origem e o Destino.')),
+        );
+      }
       setState(() {
         _isLoading = false;
       });
@@ -78,6 +89,7 @@ class _TrajetoViewState extends State<TrajetoView> {
     try {
       // O ViagemService precisa ter um método saveViagem que usa o FirebaseHelper
       await _viagemService.saveViagem(newTrip);
+      if (!mounted) return;
 
       // 4. Feedback e Redirecionamento
       ScaffoldMessenger.of(context).showSnackBar(
@@ -92,9 +104,11 @@ class _TrajetoViewState extends State<TrajetoView> {
         Navigator.of(context).pop();
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao criar a viagem: $e')),
-      );
+      if (mounted) { // Ensure context is still valid before showing SnackBar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao criar a viagem: $e')),
+        );
+      }
     } finally {
       setState(() {
         _isLoading = false;
@@ -113,21 +127,20 @@ class _TrajetoViewState extends State<TrajetoView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // --- Seção de Mapa (Simulada) ---
-            Container(
+            // --- Seção de Mapa (Real) ---
+            SizedBox( // Changed from Container to SizedBox to constrain GoogleMap
               height: 200,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8.0),
-                border: Border.all(color: Colors.grey),
-              ),
-              child: const Center(
-                child: Text('Área do Mapa Google (Futura Integração)'),
+              child: GoogleMap(
+                mapType: MapType.normal,
+                initialCameraPosition: _kGooglePlex,
+                onMapCreated: (GoogleMapController controller) {
+                  _controller.complete(controller);
+                },
               ),
             ),
             const SizedBox(height: 20),
 
-            // --- Campos de Trajeto ---
+            // --- Campos de Trajeto ---\
             TextField(
               controller: _originController,
               decoration: const InputDecoration(
@@ -175,12 +188,12 @@ class _TrajetoViewState extends State<TrajetoView> {
                 ? const Center(child: CircularProgressIndicator())
                 : ElevatedButton(
                     onPressed: _handleConfirm,
-                    child: Text(widget.isDriver
-                        ? 'Publicar Carona'
-                        : 'Solicitar Viagem'),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.all(15),
                     ),
+                    child: Text(widget.isDriver
+                        ? 'Publicar Carona'
+                        : 'Solicitar Viagem'),
                   ),
           ],
         ),

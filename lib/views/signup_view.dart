@@ -104,7 +104,7 @@ class _SignupViewState extends State<SignupView> {
                 labelText: 'Eu sou um...',
                 border: OutlineInputBorder(),
               ),
-              value: _selectedRole,
+              initialValue: _selectedRole,
               items: _roles.map((String role) {
                 return DropdownMenuItem<String>(
                   value: role,

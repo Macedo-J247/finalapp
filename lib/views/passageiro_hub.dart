@@ -46,7 +46,6 @@ class PassageiroHub extends StatelessWidget {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         ),
 
-        // TODO: Adicionar um StreamBuilder para exibir a lista de Viagens do passageiro
         const Expanded(
           child: Center(
             child: Text('Lista de viagens em andamento ou histórico aqui...'),

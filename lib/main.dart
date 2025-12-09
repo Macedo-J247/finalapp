@@ -5,7 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 // Importe a configuração específica do Firebase para o seu projeto
 // OBS: Você deve gerar este arquivo usando o FlutterFire CLI
-// import 'firebase_options.dart';
+import 'firebase_options.dart';
 
 // Views
 import 'views/login_view.dart';
@@ -17,7 +17,7 @@ void main() async {
 
   // 1. Inicializa o Firebase
   await Firebase.initializeApp(
-      // options: DefaultFirebaseOptions.currentPlatform, // Descomente se estiver usando o firebase_options.dart
+      options: DefaultFirebaseOptions.currentPlatform, 
       );
 
   runApp(const CaronaInterestadualApp());
